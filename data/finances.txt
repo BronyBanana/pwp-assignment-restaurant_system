@@ -1,0 +1,3 @@
+        "Income: 1250.00",
+        "Expenses: 630.00",
+        "Profit: 620.00"

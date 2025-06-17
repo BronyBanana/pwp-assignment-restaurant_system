@@ -1,0 +1,5 @@
+        "Chicken|20kg",
+        "Rice|15kg",
+        "Oil|10L",
+        "Spaghetti|8kg",
+        "Eggs|30pcs"

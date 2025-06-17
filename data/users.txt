@@ -1,0 +1,4 @@
+manager,Abdulla,1234
+customer,alice,1234
+cashier,Yu Zhen,1234
+chef,Ong Yuen,1234
