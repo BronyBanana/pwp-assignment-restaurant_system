@@ -1,0 +1,48 @@
+[
+    {
+        "code": "HAPPYMEAL",
+        "type": "percentage",
+        "value": 10,
+        "description": "10% off apply to chicken burger",
+        "apply_to": "specific_item",
+        "item_code": "F01"
+    },
+    {
+        "code": "FREEDRINK",
+        "type": "fixed",
+        "value": 2,
+        "description": "$2 off apply to coke",
+        "apply_to": "specific_item",
+        "item_code": "B01"
+    },
+    {
+        "code": "BIGSAVE",
+        "type": "percentage",
+        "value": 15,
+        "description": "15% off apply to total amount",
+        "apply_to": "total"
+    },
+    {
+        "code": "LUNCHSPECIAL",
+        "type": "percentage",
+        "value": 20,
+        "description": "20% off apply to pasta",
+        "apply_to": "specific_item",
+        "item_code": "F03"
+    },
+    {
+        "code": "TUNGTUNGTUNGSAHUR",
+        "type": "fixed",
+        "value": 4,
+        "description": "$5 off apply to beef burger",
+        "apply_to": "specific_item",
+        "item_code": "F03"
+    },
+    {
+        "code": "TRALALEROTRALALA",
+        "type": "percentage",
+        "value": 1,
+        "description": "1% off apply to total amount",
+        "apply_to": "total"
+    }
+]

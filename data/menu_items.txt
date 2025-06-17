@@ -1,0 +1,51 @@
+[ 
+    {
+        "item_id": "F01",
+        "name": "Chicken Burger",
+        "price": 10,
+        "category": "food",
+        "available_quantity": 30
+    },
+    {
+        "item_id": "F02",
+        "name": "Fish Burger",
+        "price": 12,
+        "category": "food",
+        "available_quantity": 25
+    },
+    { 
+        "item_id": "F03",
+        "name": "Beef Burger",
+        "price": 9,
+        "category": "food",
+        "available_quantity": 30
+    },
+    {
+        "item_id": "F04",
+        "name": "Beef & Chicken & Fish Burger",
+        "price": 7,
+        "category": "food",
+        "available_quantity": 30
+    },
+    {
+        "item_id": "B01",
+        "name": "Coke",
+        "price": 3,
+        "category": "beverage",
+        "available_quantity": 30
+    },
+    {
+        "item_id": "B02",
+        "name": "Diet Coke",
+        "price": 3,
+        "category": "beverage",
+        "available_quantity": 30
+    },
+    {
+        "item_id": "B03",
+        "name": "Cherry Coke",
+        "price": 3,
+        "category": "beverage",
+        "available_quantity": 30
+    }
+]
