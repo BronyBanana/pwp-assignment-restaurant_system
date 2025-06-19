@@ -1,4 +1,4 @@
-from display import view_order_details
+from utils.display import view_order_details
 from datetime import datetime
 
 def daily_sales_report(transactions, menu_items):

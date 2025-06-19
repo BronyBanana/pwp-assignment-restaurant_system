@@ -3,9 +3,11 @@
 # handling active orders. It provides functions for order item management, discount logic,
 # order status updates, and transaction processing in a point-of-sale system.
 
-from helpers import get_total_ordered_quantity, merge_order_items, calculate_order_total, generate_receipt
-from display import view_order_details, show_menu
+from .helpers import get_total_ordered_quantity, merge_order_items, calculate_order_total, generate_receipt
+from .display import view_order_details, show_menu
 from datetime import datetime
+import json
+
 
 def apply_discount_to_entire_order(order_id, current_orders, menu_items, discount_type):
     """Apply discount to the entire order"""
@@ -17,14 +19,17 @@ def apply_discount_to_entire_order(order_id, current_orders, menu_items, discoun
 
     if discount_type == '1':  # Percentage discount
         try:
-            percentage = float(input("Enter discount percentage for entire order (0-100): "))
+            percentage = float(
+                input("Enter discount percentage for entire order (0-100): "))
             if percentage <= 0 or percentage > 100:
                 print("Percentage must be between 0-100.")
                 return
-            
-            discount_amount = min(order_total * percentage / 100, remaining_value)
+
+            discount_amount = min(
+                order_total * percentage / 100, remaining_value)
             if discount_amount <= 0:
-                print(f"Cannot apply discount - order already fully discounted (remaining value: ${remaining_value:.2f})")
+                print(
+                    f"Cannot apply discount - order already fully discounted (remaining value: ${remaining_value:.2f})")
                 return
 
             current_orders[order_id].setdefault("discounts", []).append({
@@ -34,19 +39,22 @@ def apply_discount_to_entire_order(order_id, current_orders, menu_items, discoun
                 "apply_to": "total",
                 "amount": discount_amount
             })
-            print(f"Applied {percentage}% discount to entire order (-${discount_amount:.2f})")
+            print(
+                f"Applied {percentage}% discount to entire order (-${discount_amount:.2f})")
 
         except ValueError:
             print("Please enter a valid number.")
 
     else:  # Fixed amount discount
         try:
-            amount = float(input(f"Enter fixed discount amount for entire order (max ${remaining_value:.2f}): "))
+            amount = float(input(
+                f"Enter fixed discount amount for entire order (max ${remaining_value:.2f}): "))
             if amount <= 0:
                 print("Amount must be positive.")
                 return
             if amount > remaining_value:
-                print(f"Discount cannot exceed remaining order value (${remaining_value:.2f})")
+                print(
+                    f"Discount cannot exceed remaining order value (${remaining_value:.2f})")
                 return
 
             current_orders[order_id].setdefault("discounts", []).append({
@@ -61,7 +69,9 @@ def apply_discount_to_entire_order(order_id, current_orders, menu_items, discoun
         except ValueError:
             print("Please enter a valid number.")
 
-    calculate_order_total(order_id, current_orders, menu_items, show_calculation=True)
+    calculate_order_total(order_id, current_orders,
+                          menu_items, show_calculation=True)
+
 
 def apply_discount_to_specific_item(order_id, current_orders, menu_items, discount_type):
     """Apply discount to a specific menu item"""
@@ -92,7 +102,8 @@ def apply_discount_to_specific_item(order_id, current_orders, menu_items, discou
                     print("Percentage must be between 0-100.")
                     return
 
-                discount_amount = min(item_total * percentage / 100, remaining_value)
+                discount_amount = min(
+                    item_total * percentage / 100, remaining_value)
                 if discount_amount <= 0:
                     print(
                         f"Cannot apply discount - item already fully    discounted (remaining value: ${remaining_value:.2f})")
@@ -131,11 +142,13 @@ def apply_discount_to_specific_item(order_id, current_orders, menu_items, discou
                 })
                 print(f"Applied ${amount:.2f} discount to {item_name}")
 
-            calculate_order_total(order_id, current_orders, menu_items, show_calculation=True)
+            calculate_order_total(order_id, current_orders,
+                                  menu_items, show_calculation=True)
         else:
             print("Invalid item number!")
     except ValueError:
         print("Please enter valid numbers.")
+
 
 def apply_promo_code(order_id, current_orders, menu_items, promo_codes):
     """Apply a promo code to the order"""
@@ -168,7 +181,8 @@ def apply_promo_code(order_id, current_orders, menu_items, promo_codes):
         elif promo['apply_to'] == 'total':
             calc = calculate_order_total(order_id, current_orders, menu_items)
             applicable_total = calc['total']
-            existing_discount = sum(d['amount'] for d in calc['discount_details'])
+            existing_discount = sum(d['amount']
+                                    for d in calc['discount_details'])
             remaining_value = applicable_total - existing_discount
 
         else:
@@ -177,7 +191,8 @@ def apply_promo_code(order_id, current_orders, menu_items, promo_codes):
 
         # Calculate the discount amount
         if promo['type'] == 'percentage':
-            discount_amount = min(remaining_value * promo['value'] / 100, remaining_value)
+            discount_amount = min(
+                remaining_value * promo['value'] / 100, remaining_value)
         else:
             discount_amount = min(promo['value'], remaining_value)
 
@@ -197,12 +212,16 @@ def apply_promo_code(order_id, current_orders, menu_items, promo_codes):
         if promo['apply_to'] == 'specific_item':
             discount_entry['item_code'] = promo['item_code']
 
-        current_orders[order_id].setdefault("discounts", []).append(discount_entry)
-        print(f"Applied promo: {promo['description']} (-${discount_amount:.2f})")
-        calculate_order_total(order_id, current_orders, menu_items, show_calculation=True)
+        current_orders[order_id].setdefault(
+            "discounts", []).append(discount_entry)
+        print(
+            f"Applied promo: {promo['description']} (-${discount_amount:.2f})")
+        calculate_order_total(order_id, current_orders,
+                              menu_items, show_calculation=True)
     else:
         print("Invalid promo code.")
-        
+
+
 def apply_new_discount(order_id, current_orders, menu_items, promo_codes):
     """Apply a new discount to the order"""
     print("\nSelect Discount Type:")
@@ -218,9 +237,11 @@ def apply_new_discount(order_id, current_orders, menu_items, promo_codes):
         apply_to = input("Enter choice (1-2): ").strip()
 
         if apply_to == '1':  # Specific item
-            apply_discount_to_specific_item(order_id, current_orders, menu_items, discount_choice)
+            apply_discount_to_specific_item(
+                order_id, current_orders, menu_items, discount_choice)
         elif apply_to == '2':
-            apply_discount_to_entire_order(order_id, current_orders, menu_items, discount_choice)
+            apply_discount_to_entire_order(
+                order_id, current_orders, menu_items, discount_choice)
         else:
             print("Invalid choice.")
 
@@ -228,6 +249,7 @@ def apply_new_discount(order_id, current_orders, menu_items, promo_codes):
         apply_promo_code(order_id, current_orders, menu_items, promo_codes)
     else:
         print("Invalid choice.")
+
 
 def remove_existing_discount(order_id, current_orders, menu_items):
     """Remove an existing discount from the order"""
@@ -244,56 +266,61 @@ def remove_existing_discount(order_id, current_orders, menu_items):
         print(f"{idx}. {desc}")
 
     try:
-        remove_idx = int(input("Enter discount number to remove (or 0 to cancel): ")) - 1
+        remove_idx = int(
+            input("Enter discount number to remove (or 0 to cancel): ")) - 1
         if remove_idx == -1:
             return
         if 0 <= remove_idx < len(current_orders[order_id]["discounts"]):
             removed = current_orders[order_id]["discounts"].pop(remove_idx)
             print(f"Removed discount: {removed['description']}")
-            calculate_order_total(order_id, current_orders, menu_items, show_calculation=True)
+            calculate_order_total(order_id, current_orders,
+                                  menu_items, show_calculation=True)
         else:
             print("Invalid selection.")
     except ValueError:
         print("Please enter a valid number.")
+
 
 def manage_discounts(order_id, current_orders, menu_items, promo_codes):
     """Handle all discount operations for an order"""
     if order_id not in current_orders:
         print("No active order found!")
         return
-    
+
     while True:
         print("\n=== Discount Management ===")
         print("1. Apply Discount")
         print("2. Remove Discount")
         print("3. Back to Order Actions")
-        
+
         disc_choice = input("Select an option: ").strip()
 
         # Apply Discount
         if disc_choice == '1':
-            apply_new_discount(order_id, current_orders, menu_items, promo_codes)
-        
+            apply_new_discount(order_id, current_orders,
+                               menu_items, promo_codes)
+
         # Remove Discount
         elif disc_choice == '2':
             remove_existing_discount(order_id, current_orders, menu_items)
-            
+
         # Back to Order Actions
         elif disc_choice == '3':
             break
-        
+
         else:
             print("Invalid choice. Please try again.")
+
 
 def apply_items_to_order(order_id, current_orders, menu_items):
     """Add items to an existing order with quantity validation"""
     if order_id not in current_orders:
         print("No active order found!")
         return False
-    
+
     show_menu(menu_items, current_orders)
     items_to_add = []
-    
+
     while True:
         item_choice = input("Select item or 'done' to finish: ").strip()
         if item_choice.lower() == "done":
@@ -304,14 +331,17 @@ def apply_items_to_order(order_id, current_orders, menu_items):
                 if quantity <= 0:
                     print("Quantity must be positive.")
                     continue
-                    
-                available = menu_items[item_choice]['available_quantity'] - get_total_ordered_quantity(item_choice, current_orders)
+
+                available = menu_items[item_choice]['available_quantity'] - \
+                    get_total_ordered_quantity(item_choice, current_orders)
                 if quantity > available:
-                    print(f"Only {available} available. Cannot order {quantity}.")
+                    print(
+                        f"Only {available} available. Cannot order {quantity}.")
                     continue
-                    
+
                 items_to_add.append((item_choice, quantity))
-                print(f"Added {quantity} {menu_items[item_choice]['name']} to order {order_id}.")
+                print(
+                    f"Added {quantity} {menu_items[item_choice]['name']} to order {order_id}.")
                 show_menu(menu_items, current_orders)
             except ValueError:
                 print("Please enter a valid number.")
@@ -324,6 +354,7 @@ def apply_items_to_order(order_id, current_orders, menu_items):
         print("Items merged successfully.")
         return True
     return False
+
 
 def create_new_order(current_orders, menu_items, dine_in_counter, take_away_counter):
     print("\nSelect Order Type:")
@@ -357,12 +388,14 @@ def create_new_order(current_orders, menu_items, dine_in_counter, take_away_coun
                 if quantity <= 0:
                     print("Quantity must be positive.")
                     continue
-                
-                available = menu_items[item_choice]['available_quantity'] - get_total_ordered_quantity(item_choice, current_orders)
+
+                available = menu_items[item_choice]['available_quantity'] - \
+                    get_total_ordered_quantity(item_choice, current_orders)
                 if quantity > available:
-                    print(f"Only {available} available. Cannot order {quantity}.")
+                    print(
+                        f"Only {available} available. Cannot order {quantity}.")
                     continue
-                    
+
                 items.append((item_choice, quantity))
                 show_menu(menu_items, current_orders)
             except ValueError:
@@ -381,8 +414,9 @@ def create_new_order(current_orders, menu_items, dine_in_counter, take_away_coun
         print(f"Order {order_id} created successfully.")
     else:
         print("No items added. Order cancelled.")
-    
+
     return dine_in_counter, take_away_counter
+
 
 def process_checkout(order_id, order, current_orders, menu_items, transactions):
     print("\n=== Process Transaction ===")
@@ -403,10 +437,11 @@ def process_checkout(order_id, order, current_orders, menu_items, transactions):
     print(f"Total Amount Due: ${calc['total']:.2f}")
 
     while True:
-        payment_method = input("\nEnter payment method (cash, card or touch n go) or 'cancel': ").strip().lower()
+        payment_method = input(
+            "\nEnter payment method (cash, card or touch n go) or 'cancel': ").strip().lower()
         if payment_method in ['touchngo', 'tng', 'touch-n-go', 'touchandgo', 'touch n go']:
-           payment_method =  'touch n go'
-           break
+            payment_method = 'touch n go'
+            break
         if payment_method in ['cash', 'card']:
             break
         elif payment_method == 'cancel':
@@ -429,6 +464,7 @@ def process_checkout(order_id, order, current_orders, menu_items, transactions):
     generate_receipt(order_id, order, calc, payment_method, menu_items)
     del current_orders[order_id]
 
+
 def handle_order_actions(order_id, order, current_orders, menu_items, transactions, promo_codes):
     while True:
         print("\nSelect An Option:")
@@ -437,65 +473,54 @@ def handle_order_actions(order_id, order, current_orders, menu_items, transactio
         print("3. Cancel Order")
         print("4. Checkout")
         print("5. Back ")
-        
+
         action = input("\nEnter Choice: ")
-        
+
         if action == "1":
             # Add items to order
             apply_items_to_order(order_id, current_orders, menu_items)
-            
+
         elif action == "2":
             manage_discounts(order_id, current_orders, menu_items, promo_codes)
-            
+
         elif action == "3":
-            confirm = input(f"Confirm cancel order {order_id}? (y/n): ").lower()
+            confirm = input(
+                f"Confirm cancel order {order_id}? (y/n): ").lower()
             if confirm == 'y':
                 del current_orders[order_id]
                 print(f"Order {order_id} cancelled.")
                 return
         elif action == "4":
-            process_checkout(order_id, order, current_orders, menu_items, transactions)
+            process_checkout(order_id, order, current_orders,
+                             menu_items, transactions)
             return
-            
+
         elif action == "5":
             return
         else:
             print("Invalid choice!")
 
-def view_active_orders(current_orders, menu_items, transactions, promo_codes):
-    while True:
-        if not current_orders:
-            print("\nNo active orders.")
-            return
 
-        print("\n" + "="*80)
-        print("Active Orders".center(80))
-        print("="*80)
+def view_active_orders(_, menu_items, transactions, promo_codes):
+    print("\n--- Active Orders from File ---")
+    try:
+        with open("data/orders.txt", "r") as file:
+            for line in file:
+                order = json.loads(line.strip())
+                print(f"Order ID: {order['order_id']}")
+                print(f"Type: {order['type']}")
+                print("Items:")
+                for item in order["items"]:
+                    item_id = item["id"]
+                    qty = item["quantity"]
+                    item_name = menu_items[item_id]["name"] if item_id in menu_items else "Unknown"
+                    print(f"  - {item_name} x {qty}")
+                print("-" * 30)
+    except FileNotFoundError:
+        print("❌ No orders found.")
+    except json.JSONDecodeError as e:
+        print(f"❌ Error reading order: {e}")
 
-        orders_list = list(current_orders.items())
-        for idx, (oid, order) in enumerate(orders_list, 1):
-            status = order.get('status', 'PREPARING')
-            line = f"[{idx}] {oid:12}"
-            status_str = f"Status: {status}"
-            print(f"{line}{status_str:>{80 - len(line)}}")
-            print("-" * 80)
-        print("="*80)
-
-        choice = input("\nSelect Order Number to View Details or [0] to Return: ")
-        
-        if choice == "0":
-            break
-            
-        try:
-            idx = int(choice) - 1
-            if 0 <= idx < len(orders_list):
-                oid, order = orders_list[idx]
-                view_order_details(oid, order, menu_items)
-                handle_order_actions(oid, order, current_orders, menu_items, transactions, promo_codes)
-            else:
-                print("Invalid order number!")
-        except ValueError:
-            print("Please enter a valid number!")
 
 def order_management(current_orders, transactions, menu_items, promo_codes, dine_in_counter, take_away_counter):
     while True:
@@ -511,13 +536,12 @@ def order_management(current_orders, transactions, menu_items, promo_codes, dine
                 current_orders, menu_items, dine_in_counter, take_away_counter
             )
         elif ord_choice == '2':
-            view_active_orders(current_orders, menu_items, transactions, promo_codes)
+            view_active_orders(current_orders, menu_items,
+                               transactions, promo_codes)
 
         elif ord_choice == '3':
             break
         else:
             print("Invalid Choice. Please try again")
-    
+
     return dine_in_counter, take_away_counter
-
-
