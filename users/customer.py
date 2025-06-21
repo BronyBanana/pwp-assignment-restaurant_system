@@ -1,19 +1,37 @@
-from customer.customer_acc import customer_account_management
-from customer.menu_data import get_default_menu
-from customer.product_browsing import product_browsing
-from customer.cart_management import cart_management
-from customer.order_tracking import order_tracking
-from customer.dishes_review import dishes_review
-from utils.data_manager import DataManager
-import config
+from customer_functions.customer_acc import customer_account_management
+from customer_functions.menu_data import get_default_menu
+from customer_functions.product_browsing import product_browsing
+from customer_functions.cart_management import cart_management
+from customer_functions.order_tracking import order_tracking
+from customer_functions.dishes_review import dishes_review
+from customer_functions.view_receipt import view_receipt
+from utils.helpers import load_menu_items
+from utils.helpers import load_promo_codes
+import os
+
 
 def load_initial_data():
-    menu = get_default_menu()
-    DataManager.save_data("menu", menu)
+    os.makedirs("data", exist_ok=True)
+    for file in ["carts.txt", "customers.txt", "orders.txt", "review.txt"]:
+        if not os.path.exists(f"data/{file}"):
+            open(f"data/{file}", "w").close()
+
     return {
         'current_user': None,
-        'menu': menu
+        'menu': load_menu_items()
     }
+
+
+def view_promo_codes():
+    promo_codes = load_promo_codes()
+    if not promo_codes:
+        print("\nNo promo codes available at the moment.")
+        return
+
+    print("\n=== Available Promo Codes ===")
+    for code, discount in promo_codes.items():
+        print(f"- {code}: {discount}% off")
+
 
 def customer_main():
     state = load_initial_data()
@@ -27,9 +45,11 @@ def customer_main():
         print("3. My Cart")
         print("4. Order Tracking")
         print("5. Dish Reviews")
-        print("6. Exit")
+        print("6. View Promo Codes")
+        print("7. View My Receipt")
+        print("8. Exit")
 
-        choice = input("\nChoose (1-6): ").strip()
+        choice = input("\nChoose (1-8): ").strip()
 
         if choice == "1":
             state['current_user'] = customer_account_management(state['current_user'])
@@ -42,7 +62,19 @@ def customer_main():
         elif choice == "5":
             state['current_user'] = dishes_review(state['current_user'])
         elif choice == "6":
+            view_promo_codes()
+        elif choice == "7":
+            if state['current_user']:
+                view_receipt(state['current_user'])
+            else:
+                print("Please login to view your receipt.")
+        elif choice == "8":
             print("Goodbye!")
             break
         else:
             print("Invalid choice")
+
+
+
+if __name__ == "__main__":
+    customer_main()

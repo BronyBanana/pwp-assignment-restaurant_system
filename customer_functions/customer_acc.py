@@ -1,18 +1,27 @@
-from utils.data_manager import DataManager
-import random
-
 def load_customers():
     customers = {}
-    data = DataManager.load_data("customers", default=[])
-    for line in data:
-        if "|||" in line:
-            username, pwd = line.split("|||", 1)
-            customers[username] = pwd.strip()
+    try:
+        with open("data/customers.txt", "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and "|||" in line:
+                    username, pwd = line.split("|||", 1)
+                    customers[username] = pwd
+    except FileNotFoundError:
+        import os
+        os.makedirs("data", exist_ok=True)
+        with open("data/customers.txt", "w"):
+            pass
     return customers
 
+
 def save_customers(customers):
-    data = [f"{username}|||{pwd}" for username, pwd in customers.items()]
-    return DataManager.save_data("customers", data)
+    import os
+    os.makedirs("data", exist_ok=True)
+    with open("data/customers.txt", "w") as f:
+        for username, pwd in customers.items():
+            f.write(f"{username}|||{pwd}\n")
+
 
 def customer_account_management(current_user):
     customers = load_customers()
@@ -43,6 +52,9 @@ def customer_account_management(current_user):
             password = input("New password: ").strip()
             if not password:
                 print("Password cannot be empty!")
+                continue
+            if " " in password:
+                print("Password cannot contain spaces!")
                 continue
 
             customers[username] = password
@@ -76,6 +88,7 @@ def customer_account_management(current_user):
                 print("Already logged in!")
                 continue
 
+            import random
             guest_id = f"Guest_{random.randint(1000, 9999)}"
             print(f"Continuing as {guest_id}")
             return guest_id

@@ -13,7 +13,9 @@ def display_menu_by_category(menu, category):
 
 def product_browsing(menu):
     while True:
-        print("\n=== BROWSE MENU ===")
+        print("===========================================")
+        print("===============BROWSE MENU ================")
+        print("===========================================")
         print("1. Burgers")
         print("2. Sides")
         print("3. Drinks")

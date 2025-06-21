@@ -4,7 +4,7 @@ def load_reviews():
         with open("data/review.txt", "r") as f:
             for line in f:
                 parts = line.strip().split("|||")
-                if len(parts) >= 4:  # Ensure all parts exist
+                if len(parts) >= 4:
                     reviews.append({
                         "user": parts[0],
                         "dish": parts[1],

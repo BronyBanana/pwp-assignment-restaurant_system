@@ -1,0 +1,13 @@
+{
+    "D01": {
+        "items": [
+            [
+                "F01",
+                1
+            ]
+        ],
+        "status": "Pending",
+        "type": "Dine-In",
+        "discounts": []
+    }
+}

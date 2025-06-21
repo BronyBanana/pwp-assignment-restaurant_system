@@ -1,5 +1,4 @@
-def get_default_menu():
-    return {
+MENU_DATA={
         "B1": {
             "name": "Cheese Burger",
             "base_price": 11.00,
@@ -150,3 +149,7 @@ def get_default_menu():
             }
         }
     }
+
+def get_default_menu():
+    import copy
+    return copy.deepcopy(MENU_DATA)

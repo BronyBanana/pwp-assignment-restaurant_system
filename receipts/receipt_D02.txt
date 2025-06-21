@@ -1,0 +1,12 @@
+=== Receipt ===
+Order ID: D02
+Order Type: Dine-In
+
+Items:
+- Coke: 1 x $3.00
+
+Subtotal: $3.00
+Total Amount Due: $3.00
+Payment Method: Cash
+Transaction Time: 2025-06-21 14:55:58
+Thank you for your order!

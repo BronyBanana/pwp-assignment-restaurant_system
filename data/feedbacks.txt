@@ -1,4 +1,0 @@
-        "USR001|Chicken Burger|Loved it! Crispy and tasty.⭐⭐⭐⭐⭐",
-        "USR005|Spaghetti|Too salty.⭐⭐⭐",
-        "USR002|Nasi Lemak|Excellent taste, good portion.⭐⭐⭐⭐",
-        "USR003|Fried Rice|Cold when served.⭐⭐"

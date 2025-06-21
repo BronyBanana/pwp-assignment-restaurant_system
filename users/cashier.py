@@ -1,16 +1,9 @@
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from utils.order_management import order_management
-from utils.reports import daily_sales_report
-from utils.display import show_menu, show_promo_codes
+from utils.display import show_menu, show_promo_codes, daily_sales_report
 from utils.helpers import load_menu_items, load_promo_codes
-from utils.data_manager import DataManager
-import config
 
 def cashier_menu():
-    current_orders = {}
+    current_orders = {} 
     transactions = []
     dine_in_counter = 1
     take_away_counter = 1
@@ -29,9 +22,8 @@ def cashier_menu():
 
         if choice == '1':
             dine_in_counter, take_away_counter = order_management(
-                current_orders, transactions, menu_items, promo_codes, 
-                dine_in_counter, take_away_counter
-            )
+                current_orders, transactions, menu_items, promo_codes, dine_in_counter, take_away_counter
+                )
 
         elif choice == '2':
             daily_sales_report(transactions, menu_items)
@@ -43,14 +35,11 @@ def cashier_menu():
         elif choice == '4':
             show_promo_codes(promo_codes)
             input("\nPress Enter to return to main menu...")
-
+            
         elif choice == '5':
-            # Сохраняем данные при выходе
-            DataManager.save_data("orders", current_orders)
-            DataManager.save_data("transactions", transactions)
             print("Exiting the cashier system. Goodbye!")
             break
-
+        
         else:
             print("Invalid choice. Please try again.")
 

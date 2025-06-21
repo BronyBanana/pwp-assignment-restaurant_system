@@ -1,17 +1,34 @@
+# helpers.py provides utility functions 
+# Helper functions for loading data, processing orders, calculating totals, and generating receipts
+
 import json
 import os
 from datetime import datetime
-from utils.data_manager import DataManager
-import config
 
 def load_menu_items():
-    return DataManager.load_data("menu", default=[])
+    try:
+        with open(os.path.join("data", "menu_items.txt"), "r") as f:
+            items_list = json.load(f)
+            return {item["item_id"]: item for item in items_list}
+    except FileNotFoundError:
+        print("Error: data/menu_items.txt not found. Using empty menu.")
+        return {}
+    except json.JSONDecodeError as e:
+        print(f"Error in data/menu_items.txt: {e}. Using empty menu.")
+        return {}
 
 def load_promo_codes():
-    return DataManager.load_data("promo", default=[])
+    try:
+        with open(os.path.join("data", "promo_codes.txt"), "r") as f:
+            codes_list = json.load(f)
+            return {item["code"]: item for item in codes_list}
+    except FileNotFoundError:
+        print("Error: data/promo_codes.txt not found. Using empty promo codes.")
+        return {}
+    except json.JSONDecodeError as e:
+        print(f"Error in data/promo_codes.txt: {e}. Using empty promo codes.")
+        return {}
 
-def save_order(order, filename="orders.txt"):
-    return DataManager.append_data("orders", [json.dumps(order)])
 
 def merge_order_items(items):
     merged_items = {}
@@ -34,10 +51,9 @@ def calculate_order_total(order_id, current_orders, menu_items, show_calculation
     order = current_orders[order_id]
     subtotal = 0
     item_totals = {}
-    menu_dict = {item["item_id"]: item for item in menu_items}
 
     for item_code, qty in order["items"]:
-        price = menu_dict[item_code]['price']
+        price = menu_items[item_code]['price']
         item_total = price * qty
         item_totals[item_code] = item_total
         subtotal += item_total
@@ -71,7 +87,7 @@ def calculate_order_total(order_id, current_orders, menu_items, show_calculation
         elif discount["apply_to"] in ["food", "beverage"]:
             applicable_total = sum(
                 item_totals[code] for code in item_totals
-                if menu_dict[code]['category'] == discount["apply_to"]
+                if menu_items[code]['category'] == discount["apply_to"]
             )
 
             if discount["type"] == "percentage":
@@ -105,7 +121,7 @@ def calculate_order_total(order_id, current_orders, menu_items, show_calculation
         print(f"\nOrder ID: {order_id} ({order['type']})")
         print("\nItems:")
         for item_code, qty in order["items"]:
-            item = menu_dict[item_code]
+            item = menu_items[item_code]
             print(f"- {item['name']}: {qty} x ${item['price']}")
 
         if discount_details:
@@ -123,8 +139,70 @@ def calculate_order_total(order_id, current_orders, menu_items, show_calculation
         'item_totals': item_totals
     }
 
+def generate_receipt_lines(order_id, order, calc, payment_method, menu_items):
+    lines = []
+    
+    # Constants for receipt formatting
+    RECEIPT_WIDTH = 80
+    ITEM_NAME_WIDTH = 47
+    QTY_WIDTH = 10
+    PRICE_WIDTH = 10
+    TOTAL_COL_WIDTH = 10
+    
+    # Header
+    lines.append("=" * RECEIPT_WIDTH)
+    lines.append(f"{'RECEIPT':^{RECEIPT_WIDTH}}")
+    lines.append("=" * RECEIPT_WIDTH)
+    lines.append(f"Order ID: {order_id}")
+    lines.append(f"Type: {order.get('type', 'N/A')}")
+    
+    # Timestamp handling
+    order_timestamp = order.get('timestamp', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    lines.append(f"Date: {order_timestamp}")
+    
+    # Payment Method
+    if payment_method:
+        lines.append(f"Payment Method: {payment_method.title()}")
+    
+    lines.append("-" * RECEIPT_WIDTH)
+    
+    # Items header
+    lines.append(f"{'Item':<{ITEM_NAME_WIDTH}} {'Qty':^{QTY_WIDTH}} {'Price':>{PRICE_WIDTH}} {'Total':>{TOTAL_COL_WIDTH}}")
+    lines.append("-" * RECEIPT_WIDTH)
+    
+    subtotal = 0
+    for item_code, qty in order.get("items", []):
+        item = menu_items.get(item_code)
+        if not item:
+            lines.append(f"ERROR: Item '{item_code}' not found in menu. Skipping.")
+            continue
+
+        line_total = qty * item['price']
+        subtotal += line_total
+        lines.append(
+            f"{item['name']:<{ITEM_NAME_WIDTH}} "
+            f"{qty:^{QTY_WIDTH}} "
+            f"${item['price']:>{PRICE_WIDTH-1}.2f} "
+            f"${line_total:>{TOTAL_COL_WIDTH-1}.2f}"
+        )
+    
+    # Totals section with perfect right-alignment
+    lines.append("=" * RECEIPT_WIDTH)
+    lines.append(f"{'Subtotal:':<{RECEIPT_WIDTH-TOTAL_COL_WIDTH}}${subtotal:>{TOTAL_COL_WIDTH-1}.2f}")
+    
+    total_discount = sum(d.get('amount', 0) for d in order.get('discounts', []))
+    if total_discount > 0:
+        lines.append(f"{'Discount:':<{RECEIPT_WIDTH-TOTAL_COL_WIDTH-1}}-${total_discount:>{TOTAL_COL_WIDTH-1}.2f}")
+    
+    lines.append("-" * RECEIPT_WIDTH)
+    final_total = subtotal - total_discount
+    lines.append(f"{'Total Amount Due:':<{RECEIPT_WIDTH-TOTAL_COL_WIDTH}}${final_total:>{TOTAL_COL_WIDTH-1}.2f}")
+    lines.append("-" * RECEIPT_WIDTH)
+    lines.append("=" * RECEIPT_WIDTH)
+    
+    return lines
+
 def generate_receipt(order_id, order, calc, payment_method, menu_items):
-    menu_dict = {item["item_id"]: item for item in menu_items}
     receipt_lines = [
         "=== Receipt ===",
         f"Order ID: {order_id}",
@@ -132,9 +210,10 @@ def generate_receipt(order_id, order, calc, payment_method, menu_items):
         "",
         "Items:"
     ]
+
     for item_code, qty in order["items"]:
-        item = menu_dict[item_code]
-        receipt_lines.append(f"- {item['name']}: {qty} x ${item['price']}")
+        item = menu_items.get(item_code, {"name": "Unknown", "price": 0.0})
+        receipt_lines.append(f"- {item['name']}: {qty} x ${item['price']:.2f}")
 
     if calc['discount_details']:
         receipt_lines.append("\nDiscounts Applied:")
@@ -153,7 +232,42 @@ def generate_receipt(order_id, order, calc, payment_method, menu_items):
     receipt_text = "\n".join(receipt_lines)
     print(f"\n{receipt_text}")
 
-    receipt_filename = f"receipt_{order_id}.txt"
-    with open(receipt_filename, "w") as f:
+    os.makedirs("receipts", exist_ok=True)
+    receipt_filename = os.path.join("receipts", f"receipt_{order_id}.txt")
+    with open(receipt_filename, "w", encoding="utf-8") as f:
         f.write(receipt_text)
+
     print(f"Receipt saved to {receipt_filename}")
+
+def save_order_receipts(orders, menu_items, filepath="data/receipt.json"):
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+    receipt_data = {}
+
+    for order_id, order in orders.items():
+        items = []
+        for item_code, qty in order.get("items", []):
+            item = menu_items.get(item_code, {"name": f"[Unknown: {item_code}]", "price": 0})
+            items.append({
+                "name": item["name"],
+                "code": item_code,
+                "quantity": qty,
+                "price_each": item["price"],
+                "subtotal": round(item["price"] * qty, 2)
+            })
+
+        total_price = sum(i["subtotal"] for i in items)
+
+        receipt_data[order_id] = {
+            "status": order.get("status", "Pending"),
+            "type": order.get("type", "N/A"),
+            "timestamp": order.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            "table_number": order.get("table_number", None),
+            "remarks": order.get("remarks", ""),
+            "system_user": order.get("system_user", "guest"),
+            "items": items,
+            "total": round(total_price, 2)
+        }
+
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(receipt_data, f, indent=4)

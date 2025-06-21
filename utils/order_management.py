@@ -2,11 +2,12 @@
 # adding items, applying and removing discounts or promo codes, processing checkouts, and
 # handling active orders. It provides functions for order item management, discount logic,
 # order status updates, and transaction processing in a point-of-sale system.
-
-from .helpers import get_total_ordered_quantity, merge_order_items, calculate_order_total, generate_receipt
+import os
+import json
+from .helpers import get_total_ordered_quantity, merge_order_items, calculate_order_total, save_order_receipts, generate_receipt
+from .helpers import save_order_receipts 
 from .display import view_order_details, show_menu
 from datetime import datetime
-import json
 
 
 def apply_discount_to_entire_order(order_id, current_orders, menu_items, discount_type):
@@ -425,7 +426,7 @@ def process_checkout(order_id, order, current_orders, menu_items, transactions):
     print(f"\nProcessing Order {order_id} ({order['type']})")
     print("\nOrder Items:")
     for item_code, qty in order["items"]:
-        item = menu_items[item_code]
+        item = menu_items.get(item_code, {"name": "Unknown", "price": 0.0})
         print(f"- {item['name']}: {qty} x ${item['price']}")
 
     if calc['discount_details']:
@@ -461,8 +462,27 @@ def process_checkout(order_id, order, current_orders, menu_items, transactions):
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
 
+    # Save the receipt to file (JSON or TXT as needed)
+    save_order_receipts({order_id: {
+        "status": "Completed",
+        "type": order["type"],
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "table_number": order.get("table_number"),
+        "remarks": order.get("remarks", ""),
+        "system_user": order.get("system_user", "guest"),
+        "items": order["items"],
+        "total": calc['total']
+    }}, menu_items)
+
+    # Generate and show receipt
     generate_receipt(order_id, order, calc, payment_method, menu_items)
-    del current_orders[order_id]
+
+    # Delete order from active list
+    if order_id in current_orders:
+        del current_orders[order_id]
+    else:
+        print(f"Warning: Order ID {order_id} not found in active orders.")
+
 
 
 def handle_order_actions(order_id, order, current_orders, menu_items, transactions, promo_codes):
@@ -501,26 +521,48 @@ def handle_order_actions(order_id, order, current_orders, menu_items, transactio
             print("Invalid choice!")
 
 
-def view_active_orders(_, menu_items, transactions, promo_codes):
-    print("\n--- Active Orders from File ---")
-    try:
-        with open("data/orders.txt", "r") as file:
-            for line in file:
-                order = json.loads(line.strip())
-                print(f"Order ID: {order['order_id']}")
-                print(f"Type: {order['type']}")
-                print("Items:")
-                for item in order["items"]:
-                    item_id = item["id"]
-                    qty = item["quantity"]
-                    item_name = menu_items[item_id]["name"] if item_id in menu_items else "Unknown"
-                    print(f"  - {item_name} x {qty}")
-                print("-" * 30)
-    except FileNotFoundError:
-        print("❌ No orders found.")
-    except json.JSONDecodeError as e:
-        print(f"❌ Error reading order: {e}")
+def view_active_orders(current_orders, menu_items, transactions, promo_codes):
+    while True:
+        if not current_orders:
+            print("\nNo active orders.")
+            return
 
+        print("\n" + "="*80)
+        print("Active Orders".center(80))
+        print("="*80)
+
+        orders_list = list(current_orders.items())
+        for idx, (oid, order) in enumerate(orders_list, 1):
+            status = order.get('status', 'PREPARING')
+            line = f"[{idx}] {oid:12}"
+            status_str = f"Status: {status}"
+            print(f"{line}{status_str:>{80 - len(line)}}")
+            print("-" * 80)
+        print("="*80)
+
+        choice = input(
+            "\nSelect Order Number to View Details or [0] to Return: ")
+
+        if choice == "0":
+            break
+
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(orders_list):
+                oid, order = orders_list[idx]
+                view_order_details(oid, order, menu_items)
+                handle_order_actions(
+                    oid, order, current_orders, menu_items, transactions, promo_codes)
+            else:
+                print("Invalid order number!")
+        except ValueError:
+            print("Please enter a valid number!")
+
+
+def save_orders_to_file(orders, menu_items, filepath="data/orders.txt"):
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    with open(filepath, "w", encoding="utf-8") as f:
+        json.dump(orders, f, indent=4)
 
 def order_management(current_orders, transactions, menu_items, promo_codes, dine_in_counter, take_away_counter):
     while True:
@@ -535,6 +577,9 @@ def order_management(current_orders, transactions, menu_items, promo_codes, dine
             dine_in_counter, take_away_counter = create_new_order(
                 current_orders, menu_items, dine_in_counter, take_away_counter
             )
+            # Сохраняем текущие заказы после добавления нового
+            save_orders_to_file(current_orders, menu_items)
+
         elif ord_choice == '2':
             view_active_orders(current_orders, menu_items,
                                transactions, promo_codes)
