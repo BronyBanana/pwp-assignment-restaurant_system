@@ -1,4 +1,7 @@
+from data.menu_data import get_default_menu
+
 def display_menu_by_category(menu, category):
+    menu = get_default_menu()
     print(f"\n=== {category.upper()} ===")
     for item_id, item in menu.items():
         if item['category'] == category:

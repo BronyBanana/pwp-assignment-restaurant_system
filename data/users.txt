@@ -1,4 +1,3 @@
-username:password:role
-admin:admin123:manager
+abdulla:abdulla123:manager
 john:john123:cashier
 alice:alice123:customer

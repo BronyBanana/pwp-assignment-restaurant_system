@@ -1,7 +1,7 @@
 def load_customers():
     customers = {}
     try:
-        with open("data/customers.txt", "r") as f:
+        with open("data/users.txt", "r") as f:
             for line in f:
                 line = line.strip()
                 if line and "|||" in line:
@@ -10,7 +10,7 @@ def load_customers():
     except FileNotFoundError:
         import os
         os.makedirs("data", exist_ok=True)
-        with open("data/customers.txt", "w"):
+        with open("data/users.txt", "w"):
             pass
     return customers
 
@@ -18,7 +18,7 @@ def load_customers():
 def save_customers(customers):
     import os
     os.makedirs("data", exist_ok=True)
-    with open("data/customers.txt", "w") as f:
+    with open("data/users.txt", "w") as f:
         for username, pwd in customers.items():
             f.write(f"{username}|||{pwd}\n")
 

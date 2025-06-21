@@ -577,7 +577,6 @@ def order_management(current_orders, transactions, menu_items, promo_codes, dine
             dine_in_counter, take_away_counter = create_new_order(
                 current_orders, menu_items, dine_in_counter, take_away_counter
             )
-            # Сохраняем текущие заказы после добавления нового
             save_orders_to_file(current_orders, menu_items)
 
         elif ord_choice == '2':

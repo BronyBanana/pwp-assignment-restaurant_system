@@ -1,6 +1,7 @@
 import os
 import json
 from datetime import datetime
+from utils.helpers import load_menu_items
 
 def load_cart(user):
     cart = []
@@ -250,6 +251,7 @@ def customize_item(menu_item, full_menu=None, is_combo_part=False, component_id=
 
     return item
 
+
 def checkout(current_user, cart):
     if not cart:
         print("Cannot checkout - cart is empty!")
@@ -315,6 +317,7 @@ def checkout(current_user, cart):
 
 
 def cart_management(current_user, menu):
+    menu = load_menu_items
     if not current_user:
         print("Please login first")
         return current_user

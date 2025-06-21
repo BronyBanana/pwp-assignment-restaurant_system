@@ -5,6 +5,7 @@ from users.customer import customer_main
 
 ACCOUNTS_FILE = "data/users.txt"
 
+
 def load_accounts():
     accounts = {}
     if not os.path.exists(ACCOUNTS_FILE):
@@ -18,6 +19,7 @@ def load_accounts():
                 username, password, role = parts
                 accounts[username] = {"password": password, "role": role}
     return accounts
+
 
 def login(expected_role):
     accounts = load_accounts()
@@ -33,6 +35,7 @@ def login(expected_role):
     else:
         print("❌ Invalid credentials or role mismatch.")
         return False
+
 
 def main_menu():
     while True:
@@ -51,13 +54,14 @@ def main_menu():
             if login("manager"):
                 manager_menu()
         elif choice == "3":
-            print("\n➡️ Launching Customer Interface...")
             customer_main()
+
         elif choice == "4":
             print("👋 Exiting system.")
             break
         else:
             print("Invalid selection. Try again.")
+
 
 if __name__ == "__main__":
     main_menu()
