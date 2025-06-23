@@ -9,7 +9,6 @@ from datetime import datetime
 
 
 def apply_discount_to_entire_order(order_id, current_orders, menu_items, discount_type):
-    """Apply discount to the entire order"""
     # Calculate order total and existing discounts
     calc = calculate_order_total(order_id, current_orders, menu_items)
     order_total = calc['total']
